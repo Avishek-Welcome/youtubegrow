@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YouTube Share Hub</title>
+<meta name="description" content="Watch, share and subscribe — latest videos in one place.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f4ef; --card:#ffffff; --ink:#1d1b18; --muted:#6b665d; --line:#e4dfd5;
+  --red:#d62828; --red-ink:#fff; --wa:#1fa855; --tg:#2a8bd6; --accent:#f4a261;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 6px 20px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#141311;--card:#1e1c1a;--ink:#f1ede6;--muted:#a59f94;--line:#2f2c28;--shadow:none}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hind Siliguri",system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px 64px}
+header{padding:32px 0 20px;text-align:center}
+.logo{width:64px;height:64px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;margin:0 auto 12px;font-size:28px;font-weight:700}
+h1{font-size:1.6rem;margin:0}
+.tag{color:var(--muted);margin:6px 0 18px}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:11px 18px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;color:#fff;transition:transform .1s}
+.btn:active{transform:scale(.97)}
+.btn.sub{background:var(--red)}
+.btn.wa{background:var(--wa)}
+.btn.tg{background:var(--tg)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:8px 12px;font-size:.9rem}
+h2{font-size:1.1rem;margin:28px 0 12px;display:flex;justify-content:space-between;align-items:baseline}
+h2 small{color:var(--muted);font-weight:400;font-size:.85rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px}
+.thumb{position:relative;display:block;aspect-ratio:16/9;background:#000}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.play{position:absolute;inset:0;display:grid;place-items:center}
+.play span{width:64px;height:44px;border-radius:12px;background:var(--red);display:grid;place-items:center}
+.play span::after{content:"";border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}
+.body{padding:14px 16px 16px}
+.title{font-weight:700;font-size:1.05rem;margin:0 0 4px}
+.note{color:var(--muted);margin:0 0 12px;font-size:.95rem}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.empty{text-align:center;color:var(--muted);padding:32px 16px;border:2px dashed var(--line);border-radius:16px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;transition:transform .25s;z-index:9}
+.toast.show{transform:translateX(-50%) translateY(0)}
+/* admin */
+.admin{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:20px}
+.admin label{display:block;font-size:.9rem;color:var(--muted);margin:10px 0 4px}
+.admin input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+.admin textarea{width:100%;min-height:160px;font-family:ui-monospace,monospace;font-size:.8rem;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.hidden{display:none}
+footer{text-align:center;color:var(--muted);font-size:.85rem;margin-top:32px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo" id="logo">▶</div>
+    <h1 id="chName">Channel</h1>
+    <p class="tag" id="chTag"></p>
+    <div class="row">
+      <a class="btn sub" id="subBtn" target="_blank" rel="noopener">🔔 Subscribe করুন</a>
+      <a class="btn wa" id="shareChWa" target="_blank" rel="noopener">WhatsApp-এ শেয়ার</a>
+      <button class="btn ghost" id="shareChNative">শেয়ার / Copy</button>
+    </div>
+  </header>
+
+  <h2>সাম্প্রতিক ভিডিও <small id="count"></small></h2>
+  <div id="list"></div>
+
+  <section class="admin hidden" id="admin">
+    <strong>নতুন ভিডিও যোগ করুন (Admin)</strong>
+    <label for="aUrl">YouTube লিংক</label>
+    <input id="aUrl" placeholder="https://youtu.be/...">
+    <label for="aTitle">শিরোনাম</label>
+    <input id="aTitle" placeholder="ভিডিওর নাম">
+    <label for="aNote">ছোট বিবরণ (ঐচ্ছিক)</label>
+    <input id="aNote" placeholder="এক লাইনে কী আছে">
+    <div class="row" style="justify-content:flex-start;margin-top:12px">
+      <button class="btn sub sm" id="aAdd">যোগ করুন</button>
+      <button class="btn ghost sm" id="aClear">ড্রাফট মুছুন</button>
+    </div>
+    <label>config.js-এর জন্য VIDEOS তালিকা — কপি করে config.js-এ বসান</label>
+    <textarea id="aOut" readonly></textarea>
+    <div class="row" style="justify-content:flex-start;margin-top:8px">
+      <button class="btn ghost sm" id="aCopy">Copy</button>
+    </div>
+  </section>
+
+  <footer>ভালো লাগলে Like, Comment ও Share করুন 🙏</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+(function(){
+  const CH = window.CHANNEL || {};
+  const isAdmin = new URLSearchParams(location.search).has('admin');
+  const $ = id => document.getElementById(id);
+
+  function videoId(url){
+    if(!url) return null;
+    const m = String(url).match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : (/^[A-Za-z0-9_-]{11}$/.test(url) ? url : null);
+  }
+  function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1800)}
+  async function copy(t){try{await navigator.clipboard.writeText(t);toast('লিংক কপি হয়েছে ✓')}catch(e){prompt('কপি করুন:',t)}}
+  async function share(title,text,url){
+    if(navigator.share){try{await navigator.share({title,text,url});return}catch(e){if(e.name==='AbortError')return}}
+    copy(url);
+  }
+  const wa = (text,url) => 'https://wa.me/?text='+encodeURIComponent(text+' '+url);
+  const tg = (text,url) => 'https://t.me/share/url?url='+encodeURIComponent(url)+'&text='+encodeURIComponent(text);
+
+  // Channel header
+  const chUrl = 'https://www.youtube.com/@'+(CH.handle||'');
+  const subUrl = chUrl+'?sub_confirmation=1';
+  $('chName').textContent = CH.name || ('@'+CH.handle);
+  $('chTag').textContent = CH.tagline || '';
+  $('logo').textContent = (CH.name||'Y').trim().charAt(0).toUpperCase();
+  document.title = (CH.name||'YouTube')+' — Share Hub';
+  $('subBtn').href = subUrl;
+  $('shareChWa').href = wa(CH.shareMessage||'', subUrl);
+  $('shareChNative').onclick = () => share(CH.name, CH.shareMessage||'', subUrl);
+
+  // Drafts (admin only, per browser)
+  let drafts = [];
+  if(isAdmin){ try{drafts = JSON.parse(localStorage.getItem('yg_drafts')||'[]')}catch(e){} }
+  const saveDrafts = () => { try{localStorage.setItem('yg_drafts',JSON.stringify(drafts))}catch(e){} };
+
+  function allVideos(){ return [...drafts, ...(window.VIDEOS||[])].filter(v=>videoId(v.url)); }
+
+  function render(){
+    const vids = allVideos();
+    $('count').textContent = vids.length ? vids.length+'টি ভিডিও' : '';
+    const list = $('list'); list.innerHTML='';
+    if(!vids.length){
+      list.innerHTML = '<div class="empty">এখনও কোনো ভিডিও যোগ করা হয়নি।<br>config.js-এ ভিডিওর লিংক যোগ করুন।</div>';
+    }
+    vids.forEach(v=>{
+      const id = videoId(v.url);
+      const watch = 'https://www.youtube.com/watch?v='+id;
+      const msg = '📺 '+(v.title||'নতুন ভিডিও')+' —';
+      const card = document.createElement('article'); card.className='card';
+      card.innerHTML = `
+        <a class="thumb" href="${watch}" target="_blank" rel="noopener">
+          <img loading="lazy" alt="" src="https://i.ytimg.com/vi/${id}/hqdefault.jpg">
+          <div class="play"><span></span></div>
+        </a>
+        <div class="body">
+          <p class="title"></p>
+          <p class="note"></p>
+          <div class="actions">
+            <a class="btn sub sm" href="${watch}" target="_blank" rel="noopener">▶ দেখুন</a>
+            <a class="btn wa sm" href="${wa(msg,watch)}" target="_blank" rel="noopener">WhatsApp</a>
+            <a class="btn tg sm" href="${tg(msg,watch)}" target="_blank" rel="noopener">Telegram</a>
+            <button class="btn ghost sm" data-share>শেয়ার / Copy</button>
+          </div>
+        </div>`;
+      card.querySelector('.title').textContent = v.title || 'ভিডিও';
+      const note = card.querySelector('.note');
+      if(v.note) note.textContent = v.note; else note.remove();
+      card.querySelector('[data-share]').onclick = () => share(v.title, msg, watch);
+      list.appendChild(card);
+    });
+    if(isAdmin) $('aOut').value = 'window.VIDEOS = ' + JSON.stringify(allVideos().map(v=>({url:'https://www.youtube.com/watch?v='+videoId(v.url),title:v.title||'',note:v.note||''})), null, 2) + ';\n';
+  }
+
+  if(isAdmin){
+    $('admin').classList.remove('hidden');
+    $('aAdd').onclick = () => {
+      const url = $('aUrl').value.trim();
+      if(!videoId(url)){ toast('সঠিক YouTube লিংক দিন'); return; }
+      drafts.unshift({url, title:$('aTitle').value.trim(), note:$('aNote').value.trim()});
+      saveDrafts(); $('aUrl').value=$('aTitle').value=$('aNote').value=''; render(); toast('যোগ হয়েছে ✓');
+    };
+    $('aClear').onclick = () => { drafts=[]; saveDrafts(); render(); };
+    $('aCopy').onclick = () => copy($('aOut').value);
+  }
+  render();
+})();
+</script>
+</body>
+</html>
