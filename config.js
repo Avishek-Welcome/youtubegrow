@@ -16,6 +16,11 @@ window.CHANNEL = {
 };
 
 window.VIDEOS = [
+  {
+    url: "https://www.youtube.com/watch?v=bMKH_n-04fY",
+    title: "8 October 2026",
+    note: ""
+  },
   // Example — replace with your real video links:
   // {
   //   url: "https://www.youtube.com/watch?v=VIDEO_ID",
